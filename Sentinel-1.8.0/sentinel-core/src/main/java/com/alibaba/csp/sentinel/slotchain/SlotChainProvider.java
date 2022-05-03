@@ -37,10 +37,12 @@ public final class SlotChainProvider {
      */
     public static ProcessorSlotChain newSlotChain() {
         if (slotChainBuilder != null) {
+            // ! 创建责任链,进入DefaultSlotChainBuilder实现
             return slotChainBuilder.build();
         }
 
         // Resolve the slot chain builder SPI.
+        // ! SPI加载slot chain, 加载sentinel-core包下的META-INF/services里对应的文件里的类
         slotChainBuilder = SpiLoader.loadFirstInstanceOrDefault(SlotChainBuilder.class, DefaultSlotChainBuilder.class);
 
         if (slotChainBuilder == null) {

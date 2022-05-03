@@ -46,9 +46,11 @@ public class FlowRuleChecker {
         if (ruleProvider == null || resource == null) {
             return;
         }
+        // # 获取资源相关的校验规则
         Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
         if (rules != null) {
             for (FlowRule rule : rules) {
+                // ! canPassCheck对资源 逐条校验每个规则
                 if (!canPassCheck(rule, context, node, count, prioritized)) {
                     throw new FlowException(rule.getLimitApp(), rule);
                 }
@@ -69,19 +71,21 @@ public class FlowRuleChecker {
         }
 
         if (rule.isClusterMode()) {
+            // * 集群模式限流
             return passClusterCheck(rule, context, node, acquireCount, prioritized);
         }
-
+        // ! 单机模式限流
         return passLocalCheck(rule, context, node, acquireCount, prioritized);
     }
 
     private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                           boolean prioritized) {
+        // ! 按请求者和策略选择节点
         Node selectedNode = selectNodeByRequesterAndStrategy(rule, context, node);
         if (selectedNode == null) {
             return true;
         }
-
+        // ! 进入canPass的实现, DefaultController-快速失败,滑动时间窗算法, WarmUpController-预热令牌桶算法, RateLimiterController-排队等待漏桶算法
         return rule.getRater().canPass(selectedNode, acquireCount, prioritized);
     }
 

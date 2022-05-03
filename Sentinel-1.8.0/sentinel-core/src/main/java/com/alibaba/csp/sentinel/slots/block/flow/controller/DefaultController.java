@@ -45,9 +45,12 @@ public class DefaultController implements TrafficShapingController {
         return canPass(node, acquireCount, false);
     }
 
+    // ! 快速失败, 滑动时间窗算法
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
+        // ! 从当前事件窗口里取出统计指标数据
         int curCount = avgUsedTokens(node);
+        // # 判断 当前 qps如果大于 count阈值, 返回false,校验不通过
         if (curCount + acquireCount > count) {
             if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) {
                 long currentTime;

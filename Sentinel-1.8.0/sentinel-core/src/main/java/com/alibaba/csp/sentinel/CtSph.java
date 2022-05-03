@@ -114,6 +114,7 @@ public class CtSph implements Sph {
         return asyncEntryWithPriorityInternal(resourceWrapper, count, false, args);
     }
 
+    // ! 核心逻辑, 构建责任链,并诸葛调用slot校验责任链
     private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, boolean prioritized, Object... args)
         throws BlockException {
         Context context = ContextUtil.getContext();
@@ -132,7 +133,7 @@ public class CtSph implements Sph {
         if (!Constants.ON) {
             return new CtEntry(resourceWrapper, null, context);
         }
-
+        // ! 构建责任链
         ProcessorSlot<Object> chain = lookProcessChain(resourceWrapper);
 
         /*
@@ -145,6 +146,7 @@ public class CtSph implements Sph {
 
         Entry e = new CtEntry(resourceWrapper, chain, context);
         try {
+            // ! 校验责任链, 重点关注FlowSlot,DegradeSlot, StatisticSlot(关注StatisticSlot在调用fireEntry之后的逻辑)
             chain.entry(context, resourceWrapper, null, count, prioritized, args);
         } catch (BlockException e1) {
             e.exit(count, args);
@@ -201,7 +203,7 @@ public class CtSph implements Sph {
                     if (chainMap.size() >= Constants.MAX_SLOT_CHAIN_SIZE) {
                         return null;
                     }
-
+                    // ! 创建新的slot
                     chain = SlotChainProvider.newSlotChain();
                     Map<ResourceWrapper, ProcessorSlotChain> newMap = new HashMap<ResourceWrapper, ProcessorSlotChain>(
                         chainMap.size() + 1);

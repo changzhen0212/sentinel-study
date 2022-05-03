@@ -42,7 +42,7 @@ public class SentinelResourceAspect extends AbstractSentinelAspectSupport {
     @Around("sentinelResourceAnnotationPointcut()")
     public Object invokeResourceWithSentinel(ProceedingJoinPoint pjp) throws Throwable {
         Method originMethod = resolveMethod(pjp);
-
+        // # 拦截 @SentinelResource 注解
         SentinelResource annotation = originMethod.getAnnotation(SentinelResource.class);
         if (annotation == null) {
             // Should not go through here.
@@ -53,6 +53,8 @@ public class SentinelResourceAspect extends AbstractSentinelAspectSupport {
         int resourceType = annotation.resourceType();
         Entry entry = null;
         try {
+            // ! 核心逻辑，加载Env静态代码块，SPI加载InitFunc接口。
+            // ! 申请一个entry,如果能申请成功,说明没有被限流,否则会抛出BlockException异常,说明被限流了
             entry = SphU.entry(resourceName, resourceType, entryType, pjp.getArgs());
             Object result = pjp.proceed();
             return result;
